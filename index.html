@@ -76,19 +76,23 @@
             
           
 
-            columns:[
+    columns:[
             {title:"Customer Number", field:"customernumber"},
             {title:"Customer Name", field:"customername",},
             {title:"Sku", field:"sku"},
             {title:"Description", field:"description"},
-            {title:"Period " + monthNames[0], field: "month1"},
-            {title:"Period " +monthNames[1], field:"month2"},
-            {title:"Period " +monthNames[2], field:"month3"},
-            {title:"Period " +monthNames[3], field:"month4"},
-            {title:"Period " +monthNames[4], field:"month5"},
-            {title:"Period " +monthNames[5], field:"month6"},   
-           
-                ],
+                {//create column group
+                    title:"Forecast by Period",
+                    columns:[
+                        {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[2], field:"month3",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[3], field:"month4",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},   
+                        ,]
+                }
+            ],
         });      
         $("#forecast-results").tabulator("setData", forecast); 
        
@@ -104,6 +108,7 @@
     }
     ipcRenderer.on('mysql:results-forecastbysku',(event,forecast)=>{
      
+        let monthNames = calcForecastMonths();
       
         $("#forecast-results").tabulator({
             
@@ -112,14 +117,18 @@
             {title:"Customer Name", field:"customername",},
             {title:"Sku", field:"sku"},
             {title:"Description", field:"description"},
-            {title:"Month 1", field:"month1"},
-            {title:"Month 2", field:"month2"},
-            {title:"Month 3", field:"month3"},
-            {title:"Month 4", field:"month4"},
-            {title:"Month 5", field:"month5"},
-            {title:"Month 6", field:"month6"},   
-           
-                ],
+                {//create column group
+                    title:"Forecast by Period",
+                    columns:[
+                    {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                    {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                    {title:monthNames[2], field:"month3",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                    {title:monthNames[3], field:"month4",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                    {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                    {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},  
+                        ,]
+                }
+            ],
         });      
         $("#forecast-results").tabulator("setData", forecast); 
        
