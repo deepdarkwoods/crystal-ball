@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <script src= "http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\css\tabulator.min.css">
+        <script type="text/javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\js\tabulator.js"></script>
+        <script src="indexjq.js"></script>
+        <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
+        <link href = "C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\css\bootstrap.css" rel = "stylesheet">
+        <script>if (window.module) module = window.module;</script>
+    </head>
+     
+    <div class = "container">
+            <!--Top Horizontal Row-->
+            <div class = "row">
+                <div class="col-md-12">                   
+                </div>
+            </div>
+
+            <!--Row # 2, 1st Panel-->
+            <div class = "row">
+                <div class="col-md-6"> 
+                    <h1>Select Customer</h1>                       
+                    <select id="customer-names"></select>    
+                </div>
+                <div class="col-md-6"> 
+                        <h1>Select Sku</h1>                       
+                        <select id="skus-names"></select>    
+                </div>            
+            </div>
+
+            <!--SPACER ROW-->
+            <div class = "row">
+                <div class="col-md-12"><p>          
+                </div>
+            </div>
+
+            <!--Row # 3, Show Table-->
+            <div class = "row">
+                    <div class="col-md-12">  
+                            <div id="forecast-results">                                        
+                            </div>
+                    </div>
+            </div> 
+             
+    </div>
+
+           
+
+<script>
+
+    //Send to       Main from Window    'ipcRenderer.send'
+    //Receive in    Main from Window    'ipcMain.on'
+    //Send to       Window from Main    'mainWindow.webContents.send'
+    //receive in    Window from Main    'ipcRenderer.on'
+
+    const electron = require('electron');
+    const {ipcRenderer} = electron;
+   
+
+
+
+    //***** Get 6 Month Forecast from mySQL by CUSTOMER *****
+    function getForecast(customerNumber)    
+    {
+  
+        ipcRenderer.send('mysql:request-forecast',customerNumber);
+    }
+    ipcRenderer.on('mysql:results-forecast',(event,forecast)=>{
+     
+        let monthNames = calcForecastMonths();
+       
+        $("#forecast-results").tabulator({
+            
+          
+
+            columns:[
+            {title:"Customer Number", field:"customernumber"},
+            {title:"Customer Name", field:"customername",},
+            {title:"Sku", field:"sku"},
+            {title:"Description", field:"description"},
+            {title:"Period " + monthNames[0], field: "month1"},
+            {title:"Period " +monthNames[1], field:"month2"},
+            {title:"Period " +monthNames[2], field:"month3"},
+            {title:"Period " +monthNames[3], field:"month4"},
+            {title:"Period " +monthNames[4], field:"month5"},
+            {title:"Period " +monthNames[5], field:"month6"},   
+           
+                ],
+        });      
+        $("#forecast-results").tabulator("setData", forecast); 
+       
+    });
+    //*********************************************
+
+    
+    //***** Get 6 Month Forecast from mySQL by SKU *****
+    function getSku(skuNumber)    
+    {
+  
+        ipcRenderer.send('mysql:request-forecastbysku',skuNumber);
+    }
+    ipcRenderer.on('mysql:results-forecastbysku',(event,forecast)=>{
+     
+      
+        $("#forecast-results").tabulator({
+            
+            columns:[
+            {title:"Customer Number", field:"customernumber"},
+            {title:"Customer Name", field:"customername",},
+            {title:"Sku", field:"sku"},
+            {title:"Description", field:"description"},
+            {title:"Month 1", field:"month1"},
+            {title:"Month 2", field:"month2"},
+            {title:"Month 3", field:"month3"},
+            {title:"Month 4", field:"month4"},
+            {title:"Month 5", field:"month5"},
+            {title:"Month 6", field:"month6"},   
+           
+                ],
+        });      
+        $("#forecast-results").tabulator("setData", forecast); 
+       
+    });
+
+
+
+
+    //***** Get Customers that have forecast from mySQL *****
+    //***** Load when page is loaded for selection *****
+
+    $(document).ready(function(){
+
+        //request for customer names from MAIN process
+        {
+            console.log('mysql request for customer names sent');
+            ipcRenderer.send('mysql:request-customerlist',null);
+        }
+
+            //receive customer name results from MAIN process
+        ipcRenderer.on('mysql:results-customernames',(event,names)=>{    
+            for(let i=0;i<names.length;i++)
+            {
+                var option = document.createElement("option");
+                option.text = names[i].customername;
+                option.value = names[i].customernumber;            
+            $("#customer-names").append(option);
+            }  
+
+        });
+        //**********************************************************
+
+        //request for skus with forecast from MAIN process
+        {
+            console.log('mysql request for skus sent');
+            ipcRenderer.send('mysql:request-skulist',null);
+        }
+
+            //receive customer name results from MAIN process
+        ipcRenderer.on('mysql:results-skulist',(event,skus)=>{    
+            for(let i=0;i<skus.length;i++)
+            {
+                var option = document.createElement("option");
+                option.text = skus[i].sku + " - " + skus[i].description;
+                option.value = skus[i].sku;            
+            $("#skus-names").append(option);
+            }  
+
+        });
+
+    });
+
+
+
+        //***** When customer is selected, get specific forecast *****
+        $('#customer-names').change(function() {
+            getForecast(this.value);
+        });
+        //*********************************************
+
+        
+        //***** When customer is selected, get specific forecast *****
+        $('#skus-names').change(function() { 
+            getSku(this.value);            
+        });
+        //*********************************************
+
+
+        //calculate name of months based on current date
+        function calcForecastMonths()
+        {
+            var date = new Date();
+            var months = [date.getMonth()+1,
+            date.getMonth()+2,
+            date.getMonth()+3,
+            date.getMonth()+4,
+            date.getMonth()+5,
+            date.getMonth()+6
+                  
+            ];
+  
+            var a_months = months.map(element=>{
+            if(element > 12)
+                {return element - 12;}
+            else
+                {return element;}
+            });
+            return a_months;
+        }
+
+</script>
+
+
+
+</html>
