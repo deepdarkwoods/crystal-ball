@@ -21,6 +21,7 @@ app.on('ready',()=>{
 
 
 //mySQL request for forecasts
+//arg variable is customer number
 ipcMain.on('mysql:request-forecast',(event,arg)=>{
     var connection = mysql.createConnection({
         host        :'localhost',
@@ -36,7 +37,10 @@ ipcMain.on('mysql:request-forecast',(event,arg)=>{
               console.log("Connected to mysql")
         }
   });
-        var queryForecast = ("SELECT customernumber,customername,sku,description,month1,month2,month3,month4,month5,month6 FROM forecast WHERE customernumber=" + arg + "");
+        var queryForecast = (   `SELECT forecast.customernumber,forecast.customername,forecast.sku,forecast.description,month1,month2,month3,month4,month5,month6,s201701,s201702,s201703,s201704,s201705,s201706,s201707,s201708  
+                                 FROM forecast 
+                                 LEFT JOIN shiphistory on forecast.customernumber = shiphistory.customernumber AND forecast.sku = shiphistory.sku                                    
+                                 WHERE forecast.customernumber=` + arg + "");
    
         connection.query(queryForecast,function(error,forecast,fields){
             if (error) console.log(error);   
@@ -54,6 +58,7 @@ ipcMain.on('mysql:request-forecast',(event,arg)=>{
 
 
 //mySQL request for forecasts by SKU
+//arg variable is customer number is sku
 ipcMain.on('mysql:request-forecastbysku',(event,arg)=>{
     var connection = mysql.createConnection({
         host        :'localhost',
@@ -69,12 +74,15 @@ ipcMain.on('mysql:request-forecastbysku',(event,arg)=>{
               console.log("Connected to mysql")
         }
   });
-        var queryForecast = ("SELECT customernumber,customername,sku,description,month1,month2,month3,month4,month5,month6 FROM forecast WHERE sku = '" + arg + "' ");
+        var queryForecast = (   `SELECT forecast.customernumber,forecast.customername,forecast.sku,forecast.description,month1,month2,month3,month4,month5,month6,s201701,s201702,s201703,s201704,s201705,s201706,s201707,s201708 
+                                FROM forecast 
+                                LEFT JOIN shiphistory on forecast.customernumber = shiphistory.customernumber AND forecast.sku = shiphistory.sku   
+                                WHERE forecast.sku = '` + arg + "' ");
        
         connection.query(queryForecast,function(error,forecast,fields){
             if (error) console.log(error);   
            
-            mainWindow.webContents.send('mysql:results-forecastbysku', forecast);            
+            mainWindow.webContents.send('mysql:results-forecast', forecast);            
     
         });
         connection.end(function(){

@@ -9,6 +9,7 @@
         <script src="indexjq.js"></script>
         <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
         <link href = "C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\css\bootstrap.css" rel = "stylesheet">
+        <script lang="javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\xlsx\dist\xlsx.full.min.js"></script>
         <script>if (window.module) module = window.module;</script>
     </head>
      
@@ -19,17 +20,23 @@
                 </div>
             </div>
 
+       
             <!--Row # 2, 1st Panel-->
             <div class = "row">
-                <div class="col-md-6"> 
+                <div class="col-md-4"> 
                     <h1>Select Customer</h1>                       
                     <select id="customer-names"></select>    
                 </div>
-                <div class="col-md-6"> 
+                <div  class="col-md-2"  >
+                    <button style="margin-top: 66px;" id="download-button" onclick="downloadSheet()">Download to Excel</button>
+                </div>
+
+                <div class="col-md-5"> 
                         <h1>Select Sku</h1>                       
                         <select id="skus-names"></select>    
                 </div>            
             </div>
+            
 
             <!--SPACER ROW-->
             <div class = "row">
@@ -59,8 +66,10 @@
     const electron = require('electron');
     const {ipcRenderer} = electron;
    
-
-
+    function downloadSheet ()
+    {
+        $("#forecast-results").tabulator("download", "xlsx");
+    }
 
     //***** Get 6 Month Forecast from mySQL by CUSTOMER *****
     function getForecast(customerNumber)    
@@ -70,17 +79,34 @@
     }
     ipcRenderer.on('mysql:results-forecast',(event,forecast)=>{
      
+        //Get names of column headers
         let monthNames = calcForecastMonths();
        
         $("#forecast-results").tabulator({
-            
-          
 
+            pagination:"local",
+            paginationSize:20,
     columns:[
-            {title:"Customer Number", field:"customernumber"},
-            {title:"Customer Name", field:"customername",},
-            {title:"Sku", field:"sku"},
-            {title:"Description", field:"description"},
+            {title:"Customer Name", field:"customername", frozen:true},
+            {title:"Sku", field:"sku", frozen:true},
+            {title:"Description", field:"description", frozen:true,headerFilter:"input"},
+            {title:"Customer Number", field:"customernumber"},         
+            
+            
+
+              {//create column group
+                title:"Shipments by Period",
+                    columns:[
+                        {title:monthNames[13], field:"s201701",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[12], field:"s201702",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[11], field:"s201703",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[10], field:"s201704",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[9], field:"s201705",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[8], field:"s201706",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}}, 
+                        {title:monthNames[7], field:"s201707",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
+                        {title:monthNames[6], field:"s201708",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},  
+                        ,]
+                },//end column group
                 {//create column group
                     title:"Forecast by Period",
                     columns:[
@@ -91,7 +117,7 @@
                         {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
                         {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},   
                         ,]
-                }
+                }//end column group
             ],
         });      
         $("#forecast-results").tabulator("setData", forecast); 
@@ -102,37 +128,12 @@
     
     //***** Get 6 Month Forecast from mySQL by SKU *****
     function getSku(skuNumber)    
-    {
-  
+    {  
         ipcRenderer.send('mysql:request-forecastbysku',skuNumber);
     }
-    ipcRenderer.on('mysql:results-forecastbysku',(event,forecast)=>{
-     
-        let monthNames = calcForecastMonths();
-      
-        $("#forecast-results").tabulator({
-            
-            columns:[
-            {title:"Customer Number", field:"customernumber"},
-            {title:"Customer Name", field:"customername",},
-            {title:"Sku", field:"sku"},
-            {title:"Description", field:"description"},
-                {//create column group
-                    title:"Forecast by Period",
-                    columns:[
-                    {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                    {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                    {title:monthNames[2], field:"month3",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                    {title:monthNames[3], field:"month4",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                    {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                    {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},  
-                        ,]
-                }
-            ],
-        });      
-        $("#forecast-results").tabulator("setData", forecast); 
-       
-    });
+
+
+
 
 
 
@@ -201,18 +202,33 @@
         function calcForecastMonths()
         {
             var date = new Date();
-            var months = [date.getMonth()+1,
+            var months = [
+            //calculate FUTURE months headers from current date
+            date.getMonth()+1,
             date.getMonth()+2,
             date.getMonth()+3,
             date.getMonth()+4,
             date.getMonth()+5,
-            date.getMonth()+6
+            date.getMonth()+6,
+             //calculate PAST months headers from current date
+            date.getMonth(),
+            date.getMonth()-1,
+            date.getMonth()-2,
+            date.getMonth()-3,
+            date.getMonth()-4,
+            date.getMonth()-5,
+            date.getMonth()-6,
+            date.getMonth()-7,            
                   
             ];
   
+            //adjusts the calculated months for end and beginning of year
             var a_months = months.map(element=>{
+            
             if(element > 12)
                 {return element - 12;}
+            else if(element < 1)
+                {return element + 12}
             else
                 {return element;}
             });
