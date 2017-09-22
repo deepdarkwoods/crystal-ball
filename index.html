@@ -4,16 +4,17 @@
         <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
         <script src= "http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-        <link rel="stylesheet" href="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\css\tabulator.min.css">
+        <link rel="stylesheet" href="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\css\tabulator_site.css">
         <script type="text/javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\js\tabulator.js"></script>
         <script src="indexjq.js"></script>
-        <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
-        <link href = "C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\css\bootstrap.css" rel = "stylesheet">
+        <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\js\bootstrap.js"></script>
+        
         <script lang="javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\xlsx\dist\xlsx.full.min.js"></script>
+        <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\sparkline.js"></script>
         <script>if (window.module) module = window.module;</script>
     </head>
      
-    <div class = "container">
+    <div class = "container" style="margin: 0">
             <!--Top Horizontal Row-->
             <div class = "row">
                 <div class="col-md-12">                   
@@ -23,20 +24,23 @@
        
             <!--Row # 2, 1st Panel-->
             <div class = "row">
-                <div class="col-md-4"> 
+                <div class="col-md-6"> 
                     <h1>Select Customer</h1>                       
                     <select id="customer-names"></select>    
                 </div>
-                <div  class="col-md-2"  >
-                    <button style="margin-top: 66px;" id="download-button" onclick="downloadSheet()">Download to Excel</button>
-                </div>
-
-                <div class="col-md-5"> 
+                <div class="col-md-6"> 
                         <h1>Select Sku</h1>                       
                         <select id="skus-names"></select>    
                 </div>            
             </div>
             
+             <!--Button Row-->
+             <div class = "row">
+                <div class="col-md-12">  
+                <button id="download-button" onclick="downloadSheet()">Download to Excel</button>                 
+                </div>
+            </div>
+
 
             <!--SPACER ROW-->
             <div class = "row">
@@ -45,7 +49,7 @@
             </div>
 
             <!--Row # 3, Show Table-->
-            <div class = "row">
+            <div class = "row"  >
                     <div class="col-md-12">  
                             <div id="forecast-results">                                        
                             </div>
@@ -68,10 +72,11 @@
    
     function downloadSheet ()
     {
+
         $("#forecast-results").tabulator("download", "xlsx");
     }
 
-    //***** Get 6 Month Forecast from mySQL by CUSTOMER *****
+    //***** Get 6 Month Forecast,12 Month Ship history from mySQL by CUSTOMER or SKU *****
     function getForecast(customerNumber)    
     {
   
@@ -79,43 +84,52 @@
     }
     ipcRenderer.on('mysql:results-forecast',(event,forecast)=>{
      
+        console.log(forecast);
         //Get names of column headers
         let monthNames = calcForecastMonths();
        
         $("#forecast-results").tabulator({
 
             pagination:"local",
-            paginationSize:20,
+            paginationSize:25,                       
     columns:[
-            {title:"Customer Name", field:"customername", frozen:true},
-            {title:"Sku", field:"sku", frozen:true},
+            {title:"Customer Name", field:"customername", frozen:true,headerFilter:"input",width:130},
+            {title:"Sku", field:"sku", frozen:true,headerFilter:"input",width:100},
             {title:"Description", field:"description", frozen:true,headerFilter:"input"},
-            {title:"Customer Number", field:"customernumber"},         
+            {title:"Customer Number", field:"customernumber",width:90},         
             
             
 
               {//create column group
                 title:"Shipments by Period",
                     columns:[
-                        {title:monthNames[13], field:"s201701",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[12], field:"s201702",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[11], field:"s201703",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[10], field:"s201704",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[9], field:"s201705",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[8], field:"s201706",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}}, 
-                        {title:monthNames[7], field:"s201707",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[6], field:"s201708",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},  
+                        {title:monthNames[13], field:"s201701",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[12], field:"s201702",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[11], field:"s201703",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[10], field:"s201704",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[9], field:"s201705",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[8], field:"s201706",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}}, 
+                        {title:monthNames[7], field:"s201707",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[6], field:"s201708",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},  
                         ,]
                 },//end column group
+
+                    //spacer column
+                {
+                    columns:[{title:""}],
+                },
+
                 {//create column group
                     title:"Forecast by Period",
                     columns:[
-                        {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[2], field:"month3",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[3], field:"month4",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},
-                        {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:100,formatterParams:{precision:"false"}},   
+                        {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[2], field:"month3",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[3], field:"month4",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[4], field:"month5",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
+                        {title:monthNames[5], field:"month6",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}}, 
+                        {title:"Shipments / Forecast", field:"shipforecastarray",download:false, width:160, formatter:lineFormatter}                       
+
                         ,]
                 }//end column group
             ],
@@ -124,6 +138,16 @@
        
     });
     //*********************************************
+
+    //SPARKLINES
+    //Formatter to generate line chart
+    var lineFormatter = function(cell, formatterParams){
+        setTimeout(function(){ //give cell enough time to be added to the DOM before calling sparkline formatter
+            cell.getElement().sparkline(cell.getValue(), {width:"100%", type:"line", disableTooltips:true});
+        }, 10);
+    };
+
+
 
     
     //***** Get 6 Month Forecast from mySQL by SKU *****

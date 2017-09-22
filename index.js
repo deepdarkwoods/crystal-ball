@@ -45,7 +45,11 @@ ipcMain.on('mysql:request-forecast',(event,arg)=>{
         connection.query(queryForecast,function(error,forecast,fields){
             if (error) console.log(error);   
            
-            mainWindow.webContents.send('mysql:results-forecast', forecast);            
+            //aggregate forecast and shipments into separate arrays in the object
+            //needed to create Sparklines graph inside Tabulator
+            let aForecast = addArraytoForecastandShip(forecast);
+
+            mainWindow.webContents.send('mysql:results-forecast', aForecast);            
     
         });
         connection.end(function(){
@@ -82,7 +86,11 @@ ipcMain.on('mysql:request-forecastbysku',(event,arg)=>{
         connection.query(queryForecast,function(error,forecast,fields){
             if (error) console.log(error);   
            
-            mainWindow.webContents.send('mysql:results-forecast', forecast);            
+            //aggregate forecast and shipments into separate arrays in the object
+            //needed to create Sparklines graph inside Tabulator
+            let aForecast = addArraytoForecastandShip(forecast);
+
+            mainWindow.webContents.send('mysql:results-forecast', aForecast);            
     
         });
         connection.end(function(){
@@ -118,7 +126,8 @@ ipcMain.on('mysql:request-customerlist',(event)=>{
                                   FROM forecast
                                   ORDER BY customername` ); 
             connection.query(queryCustomerName,function(error,names,fields){
-                if (error) console.log(error);        
+                if (error) console.log(error);   
+
                     mainWindow.webContents.send('mysql:results-customernames', names);            
                     
             });
@@ -167,3 +176,24 @@ ipcMain.on('mysql:request-skulist',(event)=>{
     });
 
     //***************************************************************************************** */
+
+    function addArraytoForecastandShip(forecast)
+    {
+        //For every customer, aggregate ship and sales history into
+        //separate field:value Arrays (required by SparklinesJS graphing)  
+
+        for(let i=0;i<forecast.length;i++)
+        {
+            //Find object and create array of ship and forecast
+            let obj = forecast[i];
+
+            let shipforecastArray = [obj.s201701,obj.s201702,obj.s201703,obj.s201704,obj.s201705,obj.s201706,obj.s201707,obj.s201708,
+                obj.month1,obj.month2,obj.month3,obj.month4,obj.month5,obj.month6];
+
+            forecast[i].shipforecastarray = shipforecastArray;
+        }
+
+        return forecast;
+
+
+    }
