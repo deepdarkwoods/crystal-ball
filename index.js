@@ -18,7 +18,7 @@ app.on('ready',()=>{
       }))
 });
 
-
+//*******************************************
 
 //mySQL request for forecasts
 //arg variable is customer number
@@ -52,6 +52,32 @@ ipcMain.on('mysql:request-forecast',(event,arg)=>{
             mainWindow.webContents.send('mysql:results-forecast', aForecast);            
     
         });
+
+            //query for sales dollars
+            //request Dollar forecast by customer in total
+            var queryForecast = (`SELECT forecast.customername,
+            SUM(month1 * IFNULL(price,2.00)) AS month1foreacstdollars,
+            SUM(month2 * IFNULL(price,2.00)) AS month2foreacstdollars,
+            SUM(month3 * IFNULL(price,2.00)) AS month3foreacstdollars,
+            SUM(month4 * IFNULL(price,2.00)) AS month4foreacstdollars,
+            SUM(month5 * IFNULL(price,2.00)) AS month5foreacstdollars,
+            SUM(month6 * IFNULL(price,2.00)) AS month6foreacstdollars
+            FROM forecast
+            LEFT JOIN customerpricing 
+            ON forecast.customernumber = customerpricing.customernumber
+            AND forecast.sku = customerpricing.sku
+            WHERE forecast.customernumber=` + arg +
+            ` GROUP BY forecast.customernumber` 
+            );
+
+            connection.query(queryForecast,function(error,forecast,fields){
+            if (error) console.log(error);    
+            
+            mainWindow.webContents.send('mysql:results-forecastinsalesdollars', forecast); 
+
+            });            
+
+
         connection.end(function(){
             console.log("Connection Terminated");
         });

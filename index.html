@@ -6,7 +6,7 @@
         <script src= "http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
         <link rel="stylesheet" href="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\css\tabulator_site.css">
         <script type="text/javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\pkgs\tabulator-master\dist\js\tabulator.js"></script>
-        <script src="indexjq.js"></script>
+   
         <script src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\bootstrap\dist\js\bootstrap.js"></script>
         
         <script lang="javascript" src="C:\Users\bparker.TAC\Desktop\SANDBOX\CrystalBall\node_modules\xlsx\dist\xlsx.full.min.js"></script>
@@ -37,7 +37,7 @@
              <!--Button Row-->
              <div class = "row">
                 <div class="col-md-12">  
-                <button id="download-button" onclick="downloadSheet()">Download to Excel</button>                 
+                <button id="download-button" onclick="downloadSheet()">Download to Excel</button>                
                 </div>
             </div>
 
@@ -48,7 +48,17 @@
                 </div>
             </div>
 
-            <!--Row # 3, Show Table-->
+            <!--Row # 3, Show Forecast Dolars-->
+           
+            <div class = "row"  >
+                <div class="col-md-12">  
+                        <div id="forecast-salesdollars">                               
+                        </div>
+                </div>
+            </div> 
+          
+
+            <!--Row # 3, Show Forecast Units Table-->
             <div class = "row"  >
                     <div class="col-md-12">  
                             <div id="forecast-results">                                        
@@ -70,11 +80,16 @@
     const electron = require('electron');
     const {ipcRenderer} = electron;
    
+
+
     function downloadSheet ()
     {
 
         $("#forecast-results").tabulator("download", "xlsx");
     }
+
+
+
 
     //***** Get 6 Month Forecast,12 Month Ship history from mySQL by CUSTOMER or SKU *****
     function getForecast(customerNumber)    
@@ -82,9 +97,15 @@
   
         ipcRenderer.send('mysql:request-forecast',customerNumber);
     }
+
+
+
+
+
+    //Create table for forecast units and history
     ipcRenderer.on('mysql:results-forecast',(event,forecast)=>{
      
-        console.log(forecast);
+     
         //Get names of column headers
         let monthNames = calcForecastMonths();
        
@@ -101,7 +122,7 @@
             
 
               {//create column group
-                title:"Shipments by Period",
+                title:"Shipments by Period (Eaches)",
                     columns:[
                         {title:monthNames[13], field:"s201701",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
                         {title:monthNames[12], field:"s201702",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
@@ -120,7 +141,7 @@
                 },
 
                 {//create column group
-                    title:"Forecast by Period",
+                    title:"Forecast by Period (Eaches)",
                     columns:[
                         {title:monthNames[0], field:"month1",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
                         {title:monthNames[1], field:"month2",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false"}},
@@ -159,6 +180,38 @@
 
 
 
+ 
+    //Create table for Forecast in Sales Dollars by Customer
+    ipcRenderer.on('mysql:results-forecastinsalesdollars',(event,forecast)=>{
+
+          //Get names of column headers
+          let monthNames = calcForecastMonths();
+
+        $("#forecast-salesdollars").tabulator({
+            
+            columns:[
+              
+                //create column group
+                {title:"Forcast by Period (Sales Dollars)",
+                
+                columns:[
+                    {title:"Customer",field:"customername"},
+                    {title:monthNames[0],field:"month1foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}},
+                    {title:monthNames[1],field:"month2foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}},
+                    {title:monthNames[2],field:"month3foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}},
+                    {title:monthNames[3],field:"month4foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}},
+                    {title:monthNames[4],field:"month5foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}},
+                    {title:monthNames[5],field:"month6foreacstdollars",align:"right",formatter:"money",minWidth:60,formatterParams:{precision:"false",symbol:"$ "}}
+
+                    ,]
+                }]
+            
+        });
+
+        $("#forecast-salesdollars").tabulator("setData", forecast);
+
+
+});
 
 
 
@@ -169,7 +222,6 @@
 
         //request for customer names from MAIN process
         {
-            console.log('mysql request for customer names sent');
             ipcRenderer.send('mysql:request-customerlist',null);
         }
 
@@ -188,12 +240,12 @@
 
         //request for skus with forecast from MAIN process
         {
-            console.log('mysql request for skus sent');
             ipcRenderer.send('mysql:request-skulist',null);
         }
 
             //receive customer name results from MAIN process
-        ipcRenderer.on('mysql:results-skulist',(event,skus)=>{    
+        ipcRenderer.on('mysql:results-skulist',(event,skus)=>{   
+            console.log(skus);
             for(let i=0;i<skus.length;i++)
             {
                 var option = document.createElement("option");
